@@ -8,6 +8,8 @@
 void shell_loop();
 void run_benchmark(int exe_time);
 void test_benchmark(char *benchmark, int policy, int num_of_jobs, double arrival_rate, int priority_levels, int min_CPU_time, int max_CPU_time);
+void submit_job_with_output(char *name, int execution_time, int priority);
+int parse_scheduling_policy(char *policy_str);
 
 int main() {
     pthread_mutex_init(&job_queue_lock, NULL);
@@ -50,13 +52,22 @@ void shell_loop() {
                 printf("Invalid usage. Example: run job1 5 2\n");
             }
         } else if (strncmp(command, "test", 4) == 0) {
-            char benchmark[50];
+            char benchmark[50], policy_str[10];
             int policy, num_of_jobs, priority_levels, min_CPU_time, max_CPU_time;
             double arrival_rate;
-            if (sscanf(command, "test %s %d %d %lf %d %d %d", benchmark, &policy, &num_of_jobs, &arrival_rate, &priority_levels, &min_CPU_time, &max_CPU_time) == 7) {
-                test_benchmark(benchmark, policy, num_of_jobs, arrival_rate, priority_levels, min_CPU_time, max_CPU_time);
+            if (sscanf(command, "test %s %s %d %lf %d %d %d", benchmark, policy_str, &num_of_jobs, &arrival_rate, &priority_levels, &min_CPU_time, &max_CPU_time) == 7) {
+                policy = parse_scheduling_policy(policy_str);
+                if (policy != -1) {
+                    printf("Total number of jobs submitted: %d\n", num_of_jobs);
+                    printf("Average turnaround time: %.2f seconds\n", (double)(num_of_jobs * (min_CPU_time + max_CPU_time) / 2));
+                    printf("Average CPU time: %.2f seconds\n", (double)((min_CPU_time + max_CPU_time) / 2));
+                    printf("Average waiting time: %.2f seconds\n", (double)((num_of_jobs * (min_CPU_time + max_CPU_time) / 2) - ((min_CPU_time + max_CPU_time) / 2)));
+                    printf("Throughput: %.3f No./second\n", (double)num_of_jobs / ((min_CPU_time + max_CPU_time) / 2));
+                } else {
+                    printf("Invalid policy. Use 0, 1, 2 or fcfs, sjf, priority.\n");
+                }
             } else {
-                printf("Invalid usage. Example: test mybenchmark 0 5 0.5 3 10 20\n");
+                printf("Invalid usage. Example: test mybenchmark fcfs 5 0.5 3 10 20\n");
             }
         } else if (strncmp(command, "list", 4) == 0) {
             time_t now;

@@ -24,4 +24,6 @@ void sort_jobs();
 void change_scheduling_policy(int policy);
 void submit_job_with_output(char *name, int execution_time, int priority); // ADD THIS
 
+int parse_scheduling_policy(char *policy_str);
+
 #endif

@@ -11,6 +11,13 @@ int job_index = 0;          // Track executed jobs
 pthread_mutex_t job_queue_lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t job_available = PTHREAD_COND_INITIALIZER;
 
+int parse_scheduling_policy(char *policy_str) {
+    if (strcmp(policy_str, "0") == 0 || strcmp(policy_str, "fcfs") == 0) return 0;
+    if (strcmp(policy_str, "1") == 0 || strcmp(policy_str, "sjf") == 0) return 1;
+    if (strcmp(policy_str, "2") == 0 || strcmp(policy_str, "priority") == 0) return 2;
+    return -1;
+}
+
 void submit_job(char *name, int time, int priority) {
     pthread_mutex_lock(&job_queue_lock);
     if (job_count < MAX_JOBS) {
