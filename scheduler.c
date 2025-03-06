@@ -55,3 +55,18 @@ void change_scheduling_policy(int policy) {
     sort_jobs();
     pthread_mutex_unlock(&job_queue_lock);
 }
+
+void submit_job_with_output(char *name, int execution_time, int priority) {
+    submit_job(name, execution_time, priority);
+
+    // Calculate expected waiting time (sum of all job execution times in queue)
+    int waiting_time = 0;
+    for (int i = 0; i < job_count - 1; i++) { // Exclude the latest job itself
+        waiting_time += job_queue[i].execution_time;
+    }
+
+    printf("Job %s was submitted.\n", name);
+    printf("Total number of jobs in the queue: %d\n", job_count);
+    printf("Expected waiting time: %d seconds\n", waiting_time);
+    printf("Scheduling Policy: %s\n", scheduling_policy == 0 ? "FCFS" : scheduling_policy == 1 ? "SJF" : "Priority");
+}

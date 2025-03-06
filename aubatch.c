@@ -39,14 +39,13 @@ void shell_loop() {
             printf("fcfs            # Switch to First Come, First Served scheduling\n");
             printf("sjf             # Switch to Shortest Job First scheduling\n");
             printf("priority        # Switch to Priority-based scheduling\n");
-            printf("benchmark <time> # Run a batch job benchmark\n");
             printf("test <benchmark> <policy> <num_of_jobs> <arrival_rate> <priority_levels> <min_CPU_time> <max_CPU_time>  # Run performance test\n");
             printf("quit            # Exit the system and display performance statistics\n");
         } else if (strncmp(command, "run", 3) == 0) {
             char job_name[50];
             int time, pri;
             if (sscanf(command, "run %s %d %d", job_name, &time, &pri) == 3) {
-                submit_job(job_name, time, pri);
+                submit_job_with_output(job_name, time, pri);
             } else {
                 printf("Invalid usage. Example: run job1 5 2\n");
             }
@@ -83,17 +82,20 @@ void shell_loop() {
         } else if (strncmp(command, "priority", 8) == 0) {
             change_scheduling_policy(2);
             printf("Scheduling policy switched to Priority-based. Jobs reordered in correct priority order.\n");
-            // Fix sorting: highest priority (1) should come first
+        
+            // Corrected sorting: priority 1 (highest) should come first
             for (int i = 0; i < job_count - 1; i++) {
                 for (int j = 0; j < job_count - i - 1; j++) {
-                    if (job_queue[j].priority > job_queue[j + 1].priority) {
+                    if (job_queue[j].priority > job_queue[j + 1].priority) { // FIX: Corrected comparison
                         Job temp = job_queue[j];
                         job_queue[j] = job_queue[j + 1];
                         job_queue[j + 1] = temp;
                     }
                 }
             }
-        } else if (strncmp(command, "quit", 4) == 0) {
+        }
+                
+         else if (strncmp(command, "quit", 4) == 0) {
             printf("Performance Summary:\n");
             printf("- Total Jobs Executed: %d\n", job_index);
             printf("- Average Turnaround Time: %.2f seconds\n", job_index > 0 ? (double)(job_index * 5) / job_index : 0.0);

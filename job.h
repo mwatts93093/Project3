@@ -13,8 +13,8 @@ typedef struct {
 
 extern Job job_queue[MAX_JOBS];
 extern int job_count;
-extern int scheduling_policy;  // Declare scheduling policy
-extern int job_index;          // Declare job index
+extern int scheduling_policy;
+extern int job_index;
 extern pthread_mutex_t job_queue_lock;
 extern pthread_cond_t job_available;
 
@@ -22,5 +22,6 @@ void submit_job(char *name, int time, int priority);
 void execute_job(Job job);
 void sort_jobs();
 void change_scheduling_policy(int policy);
+void submit_job_with_output(char *name, int execution_time, int priority); // ADD THIS
 
 #endif
