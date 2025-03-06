@@ -50,13 +50,6 @@ void shell_loop() {
             } else {
                 printf("Invalid usage. Example: run job1 5 2\n");
             }
-        } else if (strncmp(command, "benchmark", 9) == 0) {
-            int exe_time;
-            if (sscanf(command, "benchmark %d", &exe_time) == 1) {
-                run_benchmark(exe_time);
-            } else {
-                printf("Invalid usage. Example: benchmark 5\n");
-            }
         } else if (strncmp(command, "test", 4) == 0) {
             char benchmark[50];
             int policy, num_of_jobs, priority_levels, min_CPU_time, max_CPU_time;
@@ -67,10 +60,19 @@ void shell_loop() {
                 printf("Invalid usage. Example: test mybenchmark 0 5 0.5 3 10 20\n");
             }
         } else if (strncmp(command, "list", 4) == 0) {
-            printf("Total Jobs: %d\n", job_count);
+            time_t now;
+            struct tm *time_info;
+            char arrival_time[10];
+            
+            printf("Total number of jobs in the queue: %d\n", job_count);
             printf("Scheduling Policy: %s\n", scheduling_policy == 0 ? "FCFS" : scheduling_policy == 1 ? "SJF" : "Priority");
+            printf("%-10s %-10s %-5s %-12s %-10s\n", "Name", "CPU_Time", "Pri", "Arrival_time", "Progress");
+            
             for (int i = 0; i < job_count; i++) {
-                printf("%s - Exec Time: %ds, Priority: %d\n", job_queue[i].name, job_queue[i].execution_time, job_queue[i].priority);
+                now = time(NULL);
+                time_info = localtime(&now);
+                strftime(arrival_time, sizeof(arrival_time), "%H:%M:%S", time_info);
+                printf("%-10s %-10d %-5d %-12s %s\n", job_queue[i].name, job_queue[i].execution_time, job_queue[i].priority, arrival_time, i == 0 ? "Run" : "");
             }
         } else if (strncmp(command, "fcfs", 4) == 0) {
             change_scheduling_policy(0);
@@ -80,7 +82,17 @@ void shell_loop() {
             printf("Scheduling policy switched to SJF. Jobs reordered.\n");
         } else if (strncmp(command, "priority", 8) == 0) {
             change_scheduling_policy(2);
-            printf("Scheduling policy switched to Priority-based. Jobs reordered.\n");
+            printf("Scheduling policy switched to Priority-based. Jobs reordered in correct priority order.\n");
+            // Fix sorting: highest priority (1) should come first
+            for (int i = 0; i < job_count - 1; i++) {
+                for (int j = 0; j < job_count - i - 1; j++) {
+                    if (job_queue[j].priority > job_queue[j + 1].priority) {
+                        Job temp = job_queue[j];
+                        job_queue[j] = job_queue[j + 1];
+                        job_queue[j + 1] = temp;
+                    }
+                }
+            }
         } else if (strncmp(command, "quit", 4) == 0) {
             printf("Performance Summary:\n");
             printf("- Total Jobs Executed: %d\n", job_index);
