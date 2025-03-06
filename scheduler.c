@@ -5,9 +5,11 @@
 
 Job job_queue[MAX_JOBS];
 int job_count = 0;
+int scheduling_policy = 0;  // Default: FCFS
+int job_index = 0;          // Track executed jobs
+
 pthread_mutex_t job_queue_lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t job_available = PTHREAD_COND_INITIALIZER;
-int scheduling_policy = 0; // 0: FCFS, 1: SJF, 2: Priority
 
 void submit_job(char *name, int time, int priority) {
     pthread_mutex_lock(&job_queue_lock);

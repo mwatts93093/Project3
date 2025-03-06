@@ -13,6 +13,8 @@ typedef struct {
 
 extern Job job_queue[MAX_JOBS];
 extern int job_count;
+extern int scheduling_policy;  // Declare scheduling policy
+extern int job_index;          // Declare job index
 extern pthread_mutex_t job_queue_lock;
 extern pthread_cond_t job_available;
 
