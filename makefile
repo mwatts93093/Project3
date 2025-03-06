@@ -6,9 +6,7 @@ CFLAGS = -Wall -pthread -g
 TARGET = aubatch
 
 # Source files
-SRCS = aubatch.c
-
-# Object files
+SRCS = aubatch.c scheduler.c dispatcher.c
 OBJS = $(SRCS:.c=.o)
 
 # Default rule
@@ -19,10 +17,10 @@ $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS)
 
 # Compile source files into object files
-%.o: %.c
+%.o: %.c job.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Clean the compiled files
+# Clean compiled files
 clean:
 	rm -f $(OBJS) $(TARGET)
 
