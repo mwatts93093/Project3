@@ -6,6 +6,8 @@
 #include "job.h"
 
 void shell_loop();
+void run_benchmark(int exe_time);
+void test_benchmark(char *benchmark, int policy, int num_of_jobs, double arrival_rate, int priority_levels, int min_CPU_time, int max_CPU_time);
 
 int main() {
     pthread_mutex_init(&job_queue_lock, NULL);
@@ -37,6 +39,8 @@ void shell_loop() {
             printf("fcfs            # Switch to First Come, First Served scheduling\n");
             printf("sjf             # Switch to Shortest Job First scheduling\n");
             printf("priority        # Switch to Priority-based scheduling\n");
+            printf("benchmark <time> # Run a batch job benchmark\n");
+            printf("test <benchmark> <policy> <num_of_jobs> <arrival_rate> <priority_levels> <min_CPU_time> <max_CPU_time>  # Run performance test\n");
             printf("quit            # Exit the system and display performance statistics\n");
         } else if (strncmp(command, "run", 3) == 0) {
             char job_name[50];
@@ -45,6 +49,22 @@ void shell_loop() {
                 submit_job(job_name, time, pri);
             } else {
                 printf("Invalid usage. Example: run job1 5 2\n");
+            }
+        } else if (strncmp(command, "benchmark", 9) == 0) {
+            int exe_time;
+            if (sscanf(command, "benchmark %d", &exe_time) == 1) {
+                run_benchmark(exe_time);
+            } else {
+                printf("Invalid usage. Example: benchmark 5\n");
+            }
+        } else if (strncmp(command, "test", 4) == 0) {
+            char benchmark[50];
+            int policy, num_of_jobs, priority_levels, min_CPU_time, max_CPU_time;
+            double arrival_rate;
+            if (sscanf(command, "test %s %d %d %lf %d %d %d", benchmark, &policy, &num_of_jobs, &arrival_rate, &priority_levels, &min_CPU_time, &max_CPU_time) == 7) {
+                test_benchmark(benchmark, policy, num_of_jobs, arrival_rate, priority_levels, min_CPU_time, max_CPU_time);
+            } else {
+                printf("Invalid usage. Example: test mybenchmark 0 5 0.5 3 10 20\n");
             }
         } else if (strncmp(command, "list", 4) == 0) {
             printf("Total Jobs: %d\n", job_count);
@@ -70,5 +90,30 @@ void shell_loop() {
         } else {
             printf("Unknown command. Type 'help' for available commands.\n");
         }
+    }
+}
+
+void test_benchmark(char *benchmark, int policy, int num_of_jobs, double arrival_rate, int priority_levels, int min_CPU_time, int max_CPU_time) {
+    printf("Running performance test for %s with policy %d...\n", benchmark, policy);
+    for (int i = 0; i < num_of_jobs; i++) {
+        int exec_time = min_CPU_time + rand() % (max_CPU_time - min_CPU_time + 1);
+        submit_job(benchmark, exec_time, rand() % priority_levels + 1);
+        usleep(arrival_rate * 1000000); // Convert seconds to microseconds
+    }
+    printf("Test completed. Check job execution logs for performance analysis.\n");
+}
+
+void run_benchmark(int exe_time) {
+    pid_t pid = fork();
+    if (pid == 0) {
+        // Child process executes the benchmark job
+        char exe_time_str[10];
+        sprintf(exe_time_str, "%d", exe_time);
+        execl("./batch_job", "batch_job", exe_time_str, NULL);
+        exit(1); // Exit if execl fails
+    } else if (pid > 0) {
+        printf("Running benchmark job for %d seconds...\n", exe_time);
+    } else {
+        perror("fork failed");
     }
 }
