@@ -22,7 +22,8 @@ void submit_job(char *name, int time, int priority);
 void execute_job(Job job);
 void sort_jobs();
 void change_scheduling_policy(int policy);
-void submit_job_with_output(char *name, int execution_time, int priority); // ADD THIS
+void submit_job_with_output(char *name, int execution_time, int priority);
+void *dispatcher_thread(void *arg);
 
 int parse_scheduling_policy(char *policy_str);
 

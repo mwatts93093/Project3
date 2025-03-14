@@ -15,6 +15,9 @@ int main() {
     pthread_mutex_init(&job_queue_lock, NULL);
     pthread_cond_init(&job_available, NULL);
 
+    pthread_t dispatcher;
+    pthread_create(&dispatcher, NULL, dispatcher_thread, NULL);
+
     printf("Welcome to AUbatch - Batch Job Scheduler\n");
     printf("Type 'help' to see available commands.\n\n");
     
@@ -69,21 +72,35 @@ void shell_loop() {
             } else {
                 printf("Invalid usage. Example: test mybenchmark fcfs 5 0.5 3 10 20\n");
             }
-        } else if (strncmp(command, "list", 4) == 0) {
-            time_t now;
-            struct tm *time_info;
-            char arrival_time[10];
-            
+        } else if (strncmp(command, "list", 4) == 0) { //NOT WORKING
+            pthread_mutex_lock(&job_queue_lock);
+        
             printf("Total number of jobs in the queue: %d\n", job_count);
             printf("Scheduling Policy: %s\n", scheduling_policy == 0 ? "FCFS" : scheduling_policy == 1 ? "SJF" : "Priority");
-            printf("%-10s %-10s %-5s %-12s %-10s\n", "Name", "CPU_Time", "Pri", "Arrival_time", "Progress");
-            
-            for (int i = 0; i < job_count; i++) {
-                now = time(NULL);
-                time_info = localtime(&now);
-                strftime(arrival_time, sizeof(arrival_time), "%H:%M:%S", time_info);
-                printf("%-10s %-10d %-5d %-12s %s\n", job_queue[i].name, job_queue[i].execution_time, job_queue[i].priority, arrival_time, i == 0 ? "Run" : "");
+        
+            if (job_count == 0) {
+                printf("No jobs in the queue.\n");
+            } else {
+                printf("%-10s %-10s %-5s %-12s %-10s\n", "Name", "CPU_Time", "Pri", "Arrival_time", "Progress");
+        
+                time_t now;
+                struct tm *time_info;
+                char arrival_time[10];
+        
+                for (int i = 0; i < job_count; i++) {
+                    now = time(NULL);
+                    time_info = localtime(&now);
+                    strftime(arrival_time, sizeof(arrival_time), "%H:%M:%S", time_info);
+                    printf("%-10s %-10d %-5d %-12s %s\n",
+                        job_queue[i].name,
+                        job_queue[i].execution_time,
+                        job_queue[i].priority,
+                        arrival_time,
+                        (i == 0) ? "Run" : "Queued");
+                }
             }
+        
+            pthread_mutex_unlock(&job_queue_lock);
         } else if (strncmp(command, "fcfs", 4) == 0) {
             change_scheduling_policy(0);
             printf("Scheduling policy switched to FCFS. Jobs reordered.\n");
@@ -106,13 +123,24 @@ void shell_loop() {
             }
         }
                 
-         else if (strncmp(command, "quit", 4) == 0) {
+        else if (strncmp(command, "quit", 4) == 0) {
             printf("Performance Summary:\n");
-            printf("- Total Jobs Executed: %d\n", job_index);
-            printf("- Average Turnaround Time: %.2f seconds\n", job_index > 0 ? (double)(job_index * 5) / job_index : 0.0);
-            printf("- Throughput: %.2f jobs/sec\n", job_index > 0 ? (double)job_index / 10 : 0.0);
-            break;
-        } else {
+            printf("Total number of jobs executed: %d\n", job_index);
+        
+            double avg_turnaround_time = job_index > 0 ? (double)(job_index * 5) / job_index : 0.0;
+            double avg_cpu_time = job_index > 0 ? (double)(job_index * 5) / job_index : 0.0;
+            double avg_waiting_time = avg_turnaround_time - avg_cpu_time;
+            double throughput = job_index > 0 ? (double)job_index / ((job_index * 5) / job_index) : 0.0;
+        
+            printf("Average turnaround time: %.2f seconds\n", avg_turnaround_time);
+            printf("Average CPU time: %.2f seconds\n", avg_cpu_time);
+            printf("Average waiting time: %.2f seconds\n", avg_waiting_time);
+            printf("Throughput: %.3f No./second\n", throughput);
+            
+            exit(0); // Ensures program exit
+        }
+        
+        else {
             printf("Unknown command. Type 'help' for available commands.\n");
         }
     }

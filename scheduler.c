@@ -20,17 +20,25 @@ int parse_scheduling_policy(char *policy_str) {
 
 void submit_job(char *name, int time, int priority) {
     pthread_mutex_lock(&job_queue_lock);
+
     if (job_count < MAX_JOBS) {
         strcpy(job_queue[job_count].name, name);
         job_queue[job_count].execution_time = time;
         job_queue[job_count].priority = priority;
         job_count++;
+
         printf("Job %s submitted (Exec Time: %d, Priority: %d)\n", name, time, priority);
+        printf("DEBUG: Total jobs in queue after submission: %d\n", job_count); // Debugging output
+
         sort_jobs();
+        pthread_cond_signal(&job_available);
+    } else {
+        printf("Job queue is full. Cannot add more jobs.\n");
     }
-    pthread_cond_signal(&job_available);
+
     pthread_mutex_unlock(&job_queue_lock);
 }
+
 
 void sort_jobs() {
     if (scheduling_policy == 1) { // SJF
