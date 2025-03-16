@@ -6,9 +6,6 @@
 #include "job.h"
 
 void shell_loop();
-void run_benchmark(int exe_time);
-void test_benchmark(char *benchmark, int policy, int num_of_jobs, double arrival_rate, int priority_levels, int min_CPU_time, int max_CPU_time);
-void submit_job_with_output(char *name, int execution_time, int priority);
 int parse_scheduling_policy(char *policy_str);
 
 int main() {
@@ -31,10 +28,20 @@ int main() {
 
 void shell_loop() {
     char command[256];
+
     while (1) {
+        // Print prompt only when a command is expected
         printf("> ");
+        fflush(stdout);
+
         fgets(command, sizeof(command), stdin);
         command[strcspn(command, "\n")] = 0; // Remove newline
+
+        // If the user just presses Enter, refresh the prompt without printing another ">"
+        if (strlen(command) == 0) {
+            continue;  // Go back to the top of the loop, reprinting the prompt just once
+        }
+
 
         if (strncmp(command, "help", 4) == 0) {
             printf("Available commands:\n");
@@ -50,7 +57,7 @@ void shell_loop() {
             char job_name[50];
             int time, pri;
             if (sscanf(command, "run %s %d %d", job_name, &time, &pri) == 3) {
-                submit_job_with_output(job_name, time, pri);
+                submit_job(job_name, time, pri, 1);  // show_output = 1 (Print Messages)
             } else {
                 printf("Invalid usage. Example: run job1 5 2\n");
             }
@@ -58,50 +65,108 @@ void shell_loop() {
             char benchmark[50], policy_str[10];
             int policy, num_of_jobs, priority_levels, min_CPU_time, max_CPU_time;
             double arrival_rate;
+        
             if (sscanf(command, "test %s %s %d %lf %d %d %d", benchmark, policy_str, &num_of_jobs, &arrival_rate, &priority_levels, &min_CPU_time, &max_CPU_time) == 7) {
                 policy = parse_scheduling_policy(policy_str);
                 if (policy != -1) {
-                    printf("Total number of jobs submitted: %d\n", num_of_jobs);
-                    printf("Average turnaround time: %.2f seconds\n", (double)(num_of_jobs * (min_CPU_time + max_CPU_time) / 2));
-                    printf("Average CPU time: %.2f seconds\n", (double)((min_CPU_time + max_CPU_time) / 2));
-                    printf("Average waiting time: %.2f seconds\n", (double)((num_of_jobs * (min_CPU_time + max_CPU_time) / 2) - ((min_CPU_time + max_CPU_time) / 2)));
-                    printf("Throughput: %.3f No./second\n", (double)num_of_jobs / ((min_CPU_time + max_CPU_time) / 2));
+                    printf("Running benchmark: %s with policy: %s\n", benchmark, policy_str);
+                    change_scheduling_policy(policy);
+        
+                    for (int i = 0; i < num_of_jobs; i++) {
+                        int exec_time = min_CPU_time + rand() % (max_CPU_time - min_CPU_time + 1);
+                        int priority = rand() % priority_levels + 1;
+        
+                        // 🚀 Submit actual job
+                        submit_job(benchmark, exec_time, priority, 0);
+        
+                        pthread_mutex_lock(&job_queue_lock);
+                        // printf("DEBUG: test submitted job #%d. Job count now: %d\n", i + 1, job_count);
+                        pthread_cond_signal(&job_available); // Wake up dispatcher
+                        pthread_mutex_unlock(&job_queue_lock);
+        
+                        usleep(arrival_rate * 1000000); // Simulate job arrival timing
+                    }
+        
+                    printf("Benchmark test completed. Jobs submitted successfully.\n");
                 } else {
                     printf("Invalid policy. Use 0, 1, 2 or fcfs, sjf, priority.\n");
                 }
             } else {
                 printf("Invalid usage. Example: test mybenchmark fcfs 5 0.5 3 10 20\n");
-            }
-        } else if (strncmp(command, "list", 4) == 0) { //NOT WORKING
+            }       
+        } else if (strncmp(command, "list", 4) == 0) {
             pthread_mutex_lock(&job_queue_lock);
         
+            time_t now;                // Declare 'now'
+            struct tm *time_info;      // Declare 'time_info'
+            char completion_time[10];  // Declare 'completion_time' for formatting
+        
+            printf("=====================================\n");
+            printf("         JOB QUEUE STATUS           \n");
+            printf("=====================================\n");
+        
             printf("Total number of jobs in the queue: %d\n", job_count);
+            printf("Total number of jobs executed: %d\n", job_index);
             printf("Scheduling Policy: %s\n", scheduling_policy == 0 ? "FCFS" : scheduling_policy == 1 ? "SJF" : "Priority");
         
-            if (job_count == 0) {
-                printf("No jobs in the queue.\n");
+            if (job_count == 0 && !has_running_job) {
+                printf("No jobs currently in queue.\n");
             } else {
-                printf("%-10s %-10s %-5s %-12s %-10s\n", "Name", "CPU_Time", "Pri", "Arrival_time", "Progress");
+                printf("\n%-10s %-10s %-5s %-12s\n", "Name", "CPU_Time", "Pri", "Status");
+                printf("-------------------------------------------------\n");
         
-                time_t now;
-                struct tm *time_info;
-                char arrival_time[10];
+                // Show currently running job inside the queue table
+                if (has_running_job) {
+                    now = time(NULL);
+                    time_info = localtime(&now);
+                    strftime(completion_time, sizeof(completion_time), "%H:%M:%S", time_info);
+                    printf("%-10s %-10d %-5d %-12s\n",
+                           last_running_job.name,
+                           last_running_job.execution_time,
+                           last_running_job.priority,
+                           "Running");
+                }
         
+                // Show queued jobs
                 for (int i = 0; i < job_count; i++) {
                     now = time(NULL);
                     time_info = localtime(&now);
-                    strftime(arrival_time, sizeof(arrival_time), "%H:%M:%S", time_info);
-                    printf("%-10s %-10d %-5d %-12s %s\n",
-                        job_queue[i].name,
-                        job_queue[i].execution_time,
-                        job_queue[i].priority,
-                        arrival_time,
-                        (i == 0) ? "Run" : "Queued");
+                    strftime(completion_time, sizeof(completion_time), "%H:%M:%S", time_info);
+                    printf("%-10s %-10d %-5d %-12s\n",
+                           job_queue[i].name,
+                           job_queue[i].execution_time,
+                           job_queue[i].priority,
+                           "Queued");
+                }
+            }
+        
+            // Completed Jobs Section
+            printf("\n=====================================\n");
+            printf("         COMPLETED JOBS              \n");
+            printf("=====================================\n");
+        
+            if (job_index == 0) {
+                printf("No jobs have been completed yet.\n");
+            } else {
+                printf("\n%-10s %-10s %-5s %-12s\n", "Name", "CPU_Time", "Pri", "Completion Time");
+                printf("-------------------------------------------------\n");
+        
+                for (int i = 0; i < job_index; i++) {
+                    now = time(NULL);
+                    time_info = localtime(&now);
+                    strftime(completion_time, sizeof(completion_time), "%H:%M:%S", time_info);
+                    printf("%-10s %-10d %-5d %-12s\n",
+                           completed_jobs[i].name,
+                           completed_jobs[i].execution_time,
+                           completed_jobs[i].priority,
+                           completion_time);
                 }
             }
         
             pthread_mutex_unlock(&job_queue_lock);
-        } else if (strncmp(command, "fcfs", 4) == 0) {
+        }
+        
+         else if (strncmp(command, "fcfs", 4) == 0) {
             change_scheduling_policy(0);
             printf("Scheduling policy switched to FCFS. Jobs reordered.\n");
         } else if (strncmp(command, "sjf", 3) == 0) {
@@ -143,30 +208,5 @@ void shell_loop() {
         else {
             printf("Unknown command. Type 'help' for available commands.\n");
         }
-    }
-}
-
-void test_benchmark(char *benchmark, int policy, int num_of_jobs, double arrival_rate, int priority_levels, int min_CPU_time, int max_CPU_time) {
-    printf("Running performance test for %s with policy %d...\n", benchmark, policy);
-    for (int i = 0; i < num_of_jobs; i++) {
-        int exec_time = min_CPU_time + rand() % (max_CPU_time - min_CPU_time + 1);
-        submit_job(benchmark, exec_time, rand() % priority_levels + 1);
-        usleep(arrival_rate * 1000000); // Convert seconds to microseconds
-    }
-    printf("Test completed. Check job execution logs for performance analysis.\n");
-}
-
-void run_benchmark(int exe_time) {
-    pid_t pid = fork();
-    if (pid == 0) {
-        // Child process executes the benchmark job
-        char exe_time_str[10];
-        sprintf(exe_time_str, "%d", exe_time);
-        execl("./batch_job", "batch_job", exe_time_str, NULL);
-        exit(1); // Exit if execl fails
-    } else if (pid > 0) {
-        printf("Running benchmark job for %d seconds...\n", exe_time);
-    } else {
-        perror("fork failed");
     }
 }
