@@ -1,29 +1,23 @@
-# Compiler and flags
+# Compiler and Flags
 CC = gcc
 CFLAGS = -Wall -pthread -g
+LDFLAGS = -lm  # Link against the math library
 
-# Executable name
-TARGET = aubatch
+# Source and Object Files
+SRC = aubatch.c scheduler.c dispatcher.c
+OBJ = $(SRC:.c=.o)
 
-# Source files
-SRCS = aubatch.c scheduler.c dispatcher.c
-OBJS = $(SRCS:.c=.o)
+# Default target
+all: aubatch
 
-# Default rule
-all: $(TARGET)
+# Build the main executable
+aubatch: $(OBJ)
+	$(CC) $(CFLAGS) $(OBJ) -o aubatch $(LDFLAGS)
 
-# Compile the program
-$(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS)
-
-# Compile source files into object files
+# Compile individual source files into object files
 %.o: %.c job.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Clean compiled files
 clean:
-	rm -f $(OBJS) $(TARGET)
-
-# Run the program
-run: $(TARGET)
-	./$(TARGET)
+	rm -f *.o aubatch

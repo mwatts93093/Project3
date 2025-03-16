@@ -3,6 +3,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <math.h>
 #include "job.h"
 
 void shell_loop();
@@ -189,20 +190,46 @@ void shell_loop() {
         }
                 
         else if (strncmp(command, "quit", 4) == 0) {
-            printf("Performance Summary:\n");
-            printf("Total number of jobs executed: %d\n", job_index);
+            printf("=================================\n");
+            printf("       PERFORMANCE SUMMARY       \n");
+            printf("=================================\n");
+            printf("Total Jobs Executed: %d\n", job_index);
         
-            double avg_turnaround_time = job_index > 0 ? (double)(job_index * 5) / job_index : 0.0;
-            double avg_cpu_time = job_index > 0 ? (double)(job_index * 5) / job_index : 0.0;
-            double avg_waiting_time = avg_turnaround_time - avg_cpu_time;
-            double throughput = job_index > 0 ? (double)job_index / ((job_index * 5) / job_index) : 0.0;
+            if (job_index > 0) {
+                double max_response_time = 0.0, min_response_time = response_times[0];
+                double response_time_sum = 0.0, response_time_squared_sum = 0.0;
+                double total_turnaround_time = 0.0, total_cpu_time = 0.0;
         
-            printf("Average turnaround time: %.2f seconds\n", avg_turnaround_time);
-            printf("Average CPU time: %.2f seconds\n", avg_cpu_time);
-            printf("Average waiting time: %.2f seconds\n", avg_waiting_time);
-            printf("Throughput: %.3f No./second\n", throughput);
-            
-            exit(0); // Ensures program exit
+                for (int i = 0; i < completed_count; i++) {
+                    double response_time = response_times[i];
+                    total_turnaround_time += response_time + completed_jobs[i].execution_time;
+                    total_cpu_time += completed_jobs[i].execution_time;
+        
+                    // Update response time metrics
+                    response_time_sum += response_time;
+                    response_time_squared_sum += response_time * response_time;
+                    if (response_time > max_response_time) max_response_time = response_time;
+                    if (response_time < min_response_time) min_response_time = response_time;
+                }
+        
+                double avg_response_time = response_time_sum / completed_count;
+                double avg_turnaround_time = total_turnaround_time / completed_count;
+                double avg_cpu_time = total_cpu_time / completed_count;
+                double avg_waiting_time = avg_turnaround_time - avg_cpu_time;
+                double variance = (response_time_squared_sum / completed_count) - (avg_response_time * avg_response_time);
+                double stddev_response_time = sqrt(variance);
+        
+                printf("Average Turnaround Time: %.2f seconds\n", avg_turnaround_time);
+                printf("Average CPU Time: %.2f seconds\n", avg_cpu_time);
+                printf("Average Waiting Time: %.2f seconds\n", avg_waiting_time);
+                printf("Maximum Response Time: %.2f seconds\n", max_response_time);
+                printf("Minimum Response Time: %.2f seconds\n", min_response_time);
+                printf("Response Time Standard Deviation: %.2f seconds\n", stddev_response_time);
+            } else {
+                printf("No jobs were executed.\n");
+            }
+        
+            exit(0);
         }
         
         else {

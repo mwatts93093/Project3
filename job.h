@@ -12,12 +12,15 @@ typedef struct {
     char name[50];
     int execution_time;
     int priority;
+    time_t submission_time;
+    time_t start_time;
 } Job;
 
 extern Job job_queue[MAX_JOBS];
 extern int job_count;
 extern Job completed_jobs[MAX_COMPLETED];
 extern int completed_count;
+extern double response_times[MAX_COMPLETED];
 extern int scheduling_policy;
 extern int job_index;
 extern pthread_mutex_t job_queue_lock;

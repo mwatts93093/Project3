@@ -11,6 +11,7 @@ int completed_count = 0;
 int job_count = 0;
 int scheduling_policy = 0;  // Default: FCFS
 int job_index = 0;          // Track executed jobs
+double response_times[MAX_COMPLETED] = {0};  // Initialize response times array
 
 pthread_mutex_t job_queue_lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t job_available = PTHREAD_COND_INITIALIZER;
@@ -61,13 +62,13 @@ void submit_job(char *name, int execution_time, int priority, int show_output) {
         strcpy(job_queue[index].name, name);
         job_queue[index].execution_time = execution_time;
         job_queue[index].priority = priority;
+        job_queue[index].submission_time = time(NULL);  // Capture submission time
         job_count++;
 
-        pthread_cond_signal(&job_available); // Wake up dispatcher
+        pthread_cond_signal(&job_available);
     } else {
         printf("Job queue is full. Cannot add more jobs.\n");
     }
 
     pthread_mutex_unlock(&job_queue_lock);
 }
-

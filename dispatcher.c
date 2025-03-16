@@ -15,8 +15,8 @@ void *dispatcher_thread(void *arg) {
         }
 
         // Dequeue the first job
-        last_running_job = job_queue[0];
-        has_running_job = 1;
+        Job job = job_queue[0];
+        job.start_time = time(NULL);  // Capture start time
 
         for (int i = 0; i < job_count - 1; i++) {
             job_queue[i] = job_queue[i + 1];
@@ -25,19 +25,16 @@ void *dispatcher_thread(void *arg) {
 
         pthread_mutex_unlock(&job_queue_lock);
 
-        printf("\nExecuting job %s for %d seconds (Priority: %d)\n", last_running_job.name, last_running_job.execution_time, last_running_job.priority);
-        fflush(stdout);
-        sleep(last_running_job.execution_time);
-        printf("\nJob %s completed.\n", last_running_job.name);
-        fflush(stdout);
+        // Execute the job
+        execute_job(job);
 
-        // Store job in completed_jobs
+        // Calculate and store response time
         pthread_mutex_lock(&job_queue_lock);
         if (completed_count < MAX_COMPLETED) {
-            completed_jobs[completed_count] = last_running_job;
+            completed_jobs[completed_count] = job;
+            response_times[completed_count] = difftime(job.start_time, job.submission_time);
             completed_count++;
         }
-        has_running_job = 0;
         job_index++;
         pthread_mutex_unlock(&job_queue_lock);
     }
