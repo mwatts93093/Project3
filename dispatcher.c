@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <stdlib.h>
 #include "job.h"
 
 void *dispatcher_thread(void *arg);
-void execute_job(Job job);
 
 void *dispatcher_thread(void *arg) {
     while (1) {
@@ -16,7 +18,6 @@ void *dispatcher_thread(void *arg) {
 
         // Dequeue the first job
         Job job = job_queue[0];
-        job.start_time = time(NULL);  // Capture start time
 
         for (int i = 0; i < job_count - 1; i++) {
             job_queue[i] = job_queue[i + 1];
@@ -25,18 +26,24 @@ void *dispatcher_thread(void *arg) {
 
         pthread_mutex_unlock(&job_queue_lock);
 
-        // Execute the job
-        execute_job(job);
+        printf("\nDispatching job: %s (Execution Time: %d, Priority: %d)\n", job.name, job.execution_time, job.priority);
 
-        // Calculate and store response time
-        pthread_mutex_lock(&job_queue_lock);
-        if (completed_count < MAX_COMPLETED) {
-            completed_jobs[completed_count] = job;
-            response_times[completed_count] = difftime(job.start_time, job.submission_time);
-            completed_count++;
+        pid_t pid = fork();  // Fork a child process
+        if (pid == 0) {  // Child process
+            char exe_time_str[10];
+            sprintf(exe_time_str, "%d", job.execution_time);
+            char *args[] = {"./batch_job", exe_time_str, NULL};
+            execv(args[0], args);
+
+            // If execv() fails
+            perror("execv failed");
+            exit(1);
+        } else if (pid > 0) {  // Parent process
+            wait(NULL);  // Wait for the child process to finish
+            printf("\nJob %s completed.\n", job.name);
+        } else {
+            perror("fork failed");
         }
-        job_index++;
-        pthread_mutex_unlock(&job_queue_lock);
     }
     return NULL;
 }
