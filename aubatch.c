@@ -101,12 +101,8 @@ void shell_loop() {
                 printf("Invalid usage. Example: test mybenchmark fcfs 5 0.5 3 10 20\n");
             }
         }
-         else if (strncmp(command, "list", 4) == 0) {
+        else if (strncmp(command, "list", 4) == 0) {
             pthread_mutex_lock(&job_queue_lock);
-        
-            time_t now;                // Declare 'now'
-            struct tm *time_info;      // Declare 'time_info'
-            char completion_time[10];  // Declare 'completion_time' for formatting
         
             printf("=====================================\n");
             printf("         JOB QUEUE STATUS           \n");
@@ -124,9 +120,6 @@ void shell_loop() {
         
                 // Show currently running job inside the queue table
                 if (has_running_job) {
-                    now = time(NULL);
-                    time_info = localtime(&now);
-                    strftime(completion_time, sizeof(completion_time), "%H:%M:%S", time_info);
                     printf("%-10s %-10d %-5d %-12s\n",
                            last_running_job.name,
                            last_running_job.execution_time,
@@ -136,9 +129,6 @@ void shell_loop() {
         
                 // Show queued jobs
                 for (int i = 0; i < job_count; i++) {
-                    now = time(NULL);
-                    time_info = localtime(&now);
-                    strftime(completion_time, sizeof(completion_time), "%H:%M:%S", time_info);
                     printf("%-10s %-10d %-5d %-12s\n",
                            job_queue[i].name,
                            job_queue[i].execution_time,
@@ -147,32 +137,28 @@ void shell_loop() {
                 }
             }
         
-            // Completed Jobs Section
+            // 🚀 Completed Jobs Section
             printf("\n=====================================\n");
             printf("         COMPLETED JOBS              \n");
             printf("=====================================\n");
         
-            if (job_index == 0) {
+            if (completed_count == 0) {
                 printf("No jobs have been completed yet.\n");
             } else {
                 printf("\n%-10s %-10s %-5s %-12s\n", "Name", "CPU_Time", "Pri", "Completion Time");
                 printf("-------------------------------------------------\n");
         
-                for (int i = 0; i < job_index; i++) {
-                    now = time(NULL);
-                    time_info = localtime(&now);
-                    strftime(completion_time, sizeof(completion_time), "%H:%M:%S", time_info);
+                for (int i = 0; i < completed_count; i++) {
                     printf("%-10s %-10d %-5d %-12s\n",
                            completed_jobs[i].name,
                            completed_jobs[i].execution_time,
                            completed_jobs[i].priority,
-                           completion_time);
+                           "Completed");
                 }
             }
         
             pthread_mutex_unlock(&job_queue_lock);
         }
-        
          else if (strncmp(command, "fcfs", 4) == 0) {
             change_scheduling_policy(0);
             printf("Scheduling policy switched to FCFS. Jobs reordered.\n");
@@ -194,7 +180,6 @@ void shell_loop() {
                 }
             }
         }
-                
         else if (strncmp(command, "quit", 4) == 0) {
             printf("=================================\n");
             printf("       PERFORMANCE SUMMARY       \n");
@@ -202,35 +187,20 @@ void shell_loop() {
             printf("Total Jobs Executed: %d\n", job_index);
         
             if (job_index > 0) {
-                double max_response_time = 0.0, min_response_time = response_times[0];
-                double response_time_sum = 0.0, response_time_squared_sum = 0.0;
-                double total_turnaround_time = 0.0, total_cpu_time = 0.0;
+                double avg_turnaround_time = 0.0, avg_cpu_time = 0.0, avg_waiting_time = 0.0;
         
                 for (int i = 0; i < completed_count; i++) {
-                    double response_time = response_times[i];
-                    total_turnaround_time += response_time + completed_jobs[i].execution_time;
-                    total_cpu_time += completed_jobs[i].execution_time;
-        
-                    // Update response time metrics
-                    response_time_sum += response_time;
-                    response_time_squared_sum += response_time * response_time;
-                    if (response_time > max_response_time) max_response_time = response_time;
-                    if (response_time < min_response_time) min_response_time = response_time;
+                    avg_turnaround_time += response_times[i] + completed_jobs[i].execution_time;
+                    avg_cpu_time += completed_jobs[i].execution_time;
                 }
         
-                double avg_response_time = response_time_sum / completed_count;
-                double avg_turnaround_time = total_turnaround_time / completed_count;
-                double avg_cpu_time = total_cpu_time / completed_count;
-                double avg_waiting_time = avg_turnaround_time - avg_cpu_time;
-                double variance = (response_time_squared_sum / completed_count) - (avg_response_time * avg_response_time);
-                double stddev_response_time = sqrt(variance);
+                avg_turnaround_time /= completed_count;
+                avg_cpu_time /= completed_count;
+                avg_waiting_time = avg_turnaround_time - avg_cpu_time;
         
                 printf("Average Turnaround Time: %.2f seconds\n", avg_turnaround_time);
                 printf("Average CPU Time: %.2f seconds\n", avg_cpu_time);
                 printf("Average Waiting Time: %.2f seconds\n", avg_waiting_time);
-                printf("Maximum Response Time: %.2f seconds\n", max_response_time);
-                printf("Minimum Response Time: %.2f seconds\n", min_response_time);
-                printf("Response Time Standard Deviation: %.2f seconds\n", stddev_response_time);
             } else {
                 printf("No jobs were executed.\n");
             }

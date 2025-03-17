@@ -1,9 +1,9 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <stdlib.h>
 #include "job.h"
 
 void *dispatcher_thread(void *arg);
@@ -41,13 +41,21 @@ void *dispatcher_thread(void *arg) {
         } else if (pid > 0) {  // Parent process
             wait(NULL);  // Wait for the child process to finish
             printf("\nJob %s completed.\n", job.name);
+
+            // 🚀 Store the completed job in the completed_jobs[] list
+            pthread_mutex_lock(&job_queue_lock);
+            if (completed_count < MAX_COMPLETED) {
+                completed_jobs[completed_count] = job;
+                completed_count++;
+            }
+            job_index++;  // Track total jobs executed
+            pthread_mutex_unlock(&job_queue_lock);
         } else {
             perror("fork failed");
         }
     }
     return NULL;
 }
-
 
 // Function to execute a job
 void execute_job(Job job) {
