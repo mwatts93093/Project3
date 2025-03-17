@@ -118,7 +118,7 @@ void shell_loop() {
                 printf("\n%-10s %-10s %-5s %-12s\n", "Name", "CPU_Time", "Pri", "Status");
                 printf("-------------------------------------------------\n");
         
-                // Show currently running job inside the queue table
+                // 🚀 Show currently running job
                 if (has_running_job) {
                     printf("%-10s %-10d %-5d %-12s\n",
                            last_running_job.name,
