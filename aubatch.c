@@ -90,7 +90,7 @@ void shell_loop() {
         
                     // Generate test jobs
                     for (int i = 0; i < num_of_jobs; i++) {
-                        jobs[i].execution_time = min_CPU_time + (rand() % (int)(max_CPU_time - min_CPU_time + 1));
+                        jobs[i].execution_time = min_CPU_time + ((double)rand() / RAND_MAX) * (max_CPU_time - min_CPU_time);
                         jobs[i].priority = rand() % priority_levels + 1;
                     }
         

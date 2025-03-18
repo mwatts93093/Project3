@@ -78,7 +78,7 @@ void *dispatcher_thread(void *arg) {
 void execute_job(Job job) {
     printf("\nExecuting job %s for %.2f seconds (Priority: %d)\n", job.name, job.execution_time, job.priority);
     fflush(stdout); // Ensure the message prints immediately
-    sleep(job.execution_time);
+    sleep((int)job.execution_time);
     printf("\nJob %s completed.\n", job.name);
     fflush(stdout);
 }

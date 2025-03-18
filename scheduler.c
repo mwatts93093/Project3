@@ -42,7 +42,7 @@ void sort_jobs() {
     if (scheduling_policy == 1) { // SJF
         for (int i = 0; i < job_count - 1; i++) {
             for (int j = 0; j < job_count - i - 1; j++) {
-                if (job_queue[j].execution_time > job_queue[j + 1].execution_time) {
+                if ((double)job_queue[j].execution_time > (double)job_queue[j + 1].execution_time) {
                     Job temp = job_queue[j];
                     job_queue[j] = job_queue[j + 1];
                     job_queue[j + 1] = temp;
@@ -70,7 +70,7 @@ void change_scheduling_policy(int policy) {
 }
 
 // Sorts by FCFS by default
-void submit_job(char *name, int execution_time, int priority, int show_output) {
+void submit_job(char *name, double execution_time, int priority, int show_output) {
     pthread_mutex_lock(&job_queue_lock);
 
     if (job_count < MAX_JOBS) {
