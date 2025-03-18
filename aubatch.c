@@ -80,35 +80,22 @@ void shell_loop() {
         } else if (strncmp(command, "test", 4) == 0) {
             char benchmark[50], policy_str[10];
             int policy, num_of_jobs, priority_levels;
-            double arrival_rate, min_CPU_time, max_CPU_time; // Had to move CPU Time vars to double instead of int for benchmarking
+            double arrival_rate, min_CPU_time, max_CPU_time;
         
             if (sscanf(command, "test %s %s %d %lf %d %lf %lf", benchmark, policy_str, &num_of_jobs, &arrival_rate, &priority_levels, &min_CPU_time, &max_CPU_time) == 7) {
                 policy = parse_scheduling_policy(policy_str);
-        
+                
                 if (policy != -1) {
-                    // Compute estimated metrics
-                    double avg_cpu_time = (min_CPU_time + max_CPU_time) / 2.0;
-                    double avg_turnaround_time = avg_cpu_time * num_of_jobs;
-                    double avg_waiting_time = avg_turnaround_time - avg_cpu_time;
-                    double throughput = (avg_cpu_time > 0) ? (double)num_of_jobs / avg_cpu_time : 0.0;  // Prevent division by zero
+                    Job jobs[num_of_jobs];
         
-                    // Print formatted benchmark estimation output
-                    printf("\n=====================================\n");
-                    printf("       Benchmark Estimation         \n");
-                    printf("=====================================\n");
-                    printf("Benchmark Name     : %s\n", benchmark);
-                    printf("Scheduling Policy  : %s\n", 
-                        (policy == 0) ? "FCFS" : (policy == 1) ? "SJF" : "Priority");
-                    printf("Total Jobs Simulated: %d\n", num_of_jobs);
-                    printf("Arrival Rate       : %.2f jobs/sec\n", arrival_rate);
-                    printf("Priority Levels    : %d\n", priority_levels);
-                    printf("-------------------------------------\n");
-                    printf("Avg Turnaround Time: %.2f seconds\n", avg_turnaround_time);
-                    printf("Avg CPU Time       : %.2f seconds\n", avg_cpu_time);
-                    printf("Avg Waiting Time   : %.2f seconds\n", avg_waiting_time);
-                    printf("Throughput         : %.3f No./second\n", throughput);
-                    printf("=====================================\n\n");
+                    // Generate test jobs
+                    for (int i = 0; i < num_of_jobs; i++) {
+                        jobs[i].execution_time = min_CPU_time + (rand() % (int)(max_CPU_time - min_CPU_time + 1));
+                        jobs[i].priority = rand() % priority_levels + 1;
+                    }
         
+                    // Call evaluation function
+                    evaluate_performance(jobs, num_of_jobs, policy);
                 } else {
                     printf("Invalid policy. Use fcfs, sjf, or priority.\n");
                 }

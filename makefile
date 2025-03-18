@@ -5,7 +5,7 @@ LDFLAGS = -lm
 
 # Source and Object Files
 SRC = aubatch.c scheduler.c dispatcher.c
-OBJ = $(SRC:.c=.o)
+OBJ = aubatch.o scheduler.o dispatcher.o evaluation.o
 
 # Default target
 all: aubatch
