@@ -122,7 +122,7 @@ void shell_loop() {
         
                 // 🚀 Show currently running job
                 if (has_running_job) {
-                    printf("%-10s %-10d %-5d %-12s\n",
+                    printf("%-10s %-10.2f %-5d %-12s\n",
                            last_running_job.name,
                            last_running_job.execution_time,
                            last_running_job.priority,
@@ -151,7 +151,7 @@ void shell_loop() {
                 printf("-------------------------------------------------\n");
         
                 for (int i = 0; i < completed_count; i++) {
-                    printf("%-10s %-10d %-5d %-12s\n",
+                    printf("%-10s %-10.2f %-5d %-12s\n",
                            completed_jobs[i].name,
                            completed_jobs[i].execution_time,
                            completed_jobs[i].priority,

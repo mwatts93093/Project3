@@ -42,12 +42,12 @@ void *dispatcher_thread(void *arg) {
 
         pthread_mutex_unlock(&job_queue_lock);
 
-        printf("\nDispatching job: %s (Execution Time: %d, Priority: %d)\n", last_running_job.name, last_running_job.execution_time, last_running_job.priority);
+        printf("\nDispatching job: %s (Execution Time: %.2f, Priority: %d)\n", last_running_job.name, last_running_job.execution_time, last_running_job.priority);
 
         pid_t pid = fork();  // Fork a child process
         if (pid == 0) {  // Child process
             char exe_time_str[10];
-            sprintf(exe_time_str, "%d", last_running_job.execution_time);
+            sprintf(exe_time_str, "%.2f", last_running_job.execution_time);
             char *args[] = {"./batch_job", exe_time_str, NULL};
             execv(args[0], args);
 
@@ -76,7 +76,7 @@ void *dispatcher_thread(void *arg) {
 
 // Function to execute a job
 void execute_job(Job job) {
-    printf("\nExecuting job %s for %d seconds (Priority: %d)\n", job.name, job.execution_time, job.priority);
+    printf("\nExecuting job %s for %.2f seconds (Priority: %d)\n", job.name, job.execution_time, job.priority);
     fflush(stdout); // Ensure the message prints immediately
     sleep(job.execution_time);
     printf("\nJob %s completed.\n", job.name);
