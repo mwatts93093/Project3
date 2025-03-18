@@ -51,7 +51,7 @@ void execute_job(Job job);
 void sort_jobs();
 void change_scheduling_policy(int policy);
 void *dispatcher_thread(void *arg);
-void submit_job(char *name, int execution_time, int priority, int show_output);
+void submit_job(char *name, double execution_time, int priority, int show_output);
 void evaluate_performance(Job jobs[], int num_jobs, int scheduling_policy);
 
 int parse_scheduling_policy(char *policy_str);
