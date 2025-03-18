@@ -1,3 +1,18 @@
+/* All code in this source is my own. Primary source for code reference was Microsoft.learn.
+* This code was based off of Dr. Qin's code. It is not the same but I did start from there.
+* I did not copy/paste code directly from Phind AI but I did have it educate me and assist in solving my issues.
+* COMP7500: Project 3: Aubatch
+* Tucker Watts
+* Auburn University
+*
+* This source code shows how to evaluate metrics related to job scheduling methods.
+* 
+* Compile with makefile using:
+* make
+*
+* Can be run using "./aubatch" and referring to the help command.
+*/
+
 #ifndef JOB_H
 #define JOB_H
 

@@ -8,15 +8,11 @@ SRC = aubatch.c scheduler.c dispatcher.c
 OBJ = $(SRC:.c=.o)
 
 # Default target
-all: aubatch batch_job
+all: aubatch
 
 # Build the main executable
 aubatch: $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) -o aubatch $(LDFLAGS)
-
-# Compile batch_job separately
-batch_job: batch_job.c
-	$(CC) $(CFLAGS) batch_job.c -o batch_job
 
 # Compile individual source files into object files
 %.o: %.c job.h
@@ -24,4 +20,4 @@ batch_job: batch_job.c
 
 # Clean compiled files
 clean:
-	rm -f *.o aubatch batch_job
+	rm -f *.o aubatch

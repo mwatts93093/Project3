@@ -1,3 +1,18 @@
+/* All code in this source is my own. Primary source for code reference was Microsoft.learn.
+* This code was based off of Dr. Qin's code. It is not the same but I did start from there.
+* I did not copy/paste code directly from Phind AI but I did have it educate me and assist in solving my issues.
+* COMP7500: Project 3: Aubatch
+* Tucker Watts
+* Auburn University
+*
+* TThis source code shows how to evaluate metrics related to job scheduling methods.
+* 
+* Compile with makefile using:
+* make
+*
+* Can be run using "./aubatch" and referring to the help command.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -64,10 +79,10 @@ void shell_loop() {
             }
         } else if (strncmp(command, "test", 4) == 0) {
             char benchmark[50], policy_str[10];
-            int policy, num_of_jobs, priority_levels, min_CPU_time, max_CPU_time;
-            double arrival_rate;
+            int policy, num_of_jobs, priority_levels;
+            double arrival_rate, min_CPU_time, max_CPU_time; // Had to move CPU Time vars to double instead of int for benchmarking
         
-            if (sscanf(command, "test %s %s %d %lf %d %d %d", benchmark, policy_str, &num_of_jobs, &arrival_rate, &priority_levels, &min_CPU_time, &max_CPU_time) == 7) {
+            if (sscanf(command, "test %s %s %d %lf %d %lf %lf", benchmark, policy_str, &num_of_jobs, &arrival_rate, &priority_levels, &min_CPU_time, &max_CPU_time) == 7) {
                 policy = parse_scheduling_policy(policy_str);
         
                 if (policy != -1) {
