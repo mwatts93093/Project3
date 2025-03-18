@@ -1,3 +1,11 @@
+# All code in this source is my own. Primary source for code reference was Microsoft.learn.
+# This code was based off of Dr. Qin's code. It is not the same but I did start from there.
+# I did not copy/paste code directly from Phind AI but I did have it educate me and assist in solving my issues.
+# COMP7500: Project 3: Aubatch
+# Tucker Watts
+# Auburn University
+# This script was made by me for the purpose of automating my benchmark gathering using the tool.
+
 #!/bin/bash
 
 # Define test parameters
@@ -7,10 +15,11 @@ cpu_time_ranges=("0.1 0.5" "0.1 1" "0.5 1" "1 10")
 scheduling_policies=("fcfs" "sjf" "priority")
 benchmark_name="mybenchmark"
 
-# Create a timestamped log file
-log_file="aubatch_test_results_$(date +%F_%T).log"
-echo "AUbatch Performance Test Log - $(date)" > "$log_file"
-echo "=========================================" >> "$log_file"
+# CSV Output File
+csv_file="benchmark_results.csv"
+
+# Write CSV headers
+echo "Policy,Jobs,Arrival Rate (No./Sec),CPU Time Range,Turnaround Time,CPU Time,Waiting Time,Throughput" > "$csv_file"
 
 # Start automated testing
 echo "Starting automated testing..."
@@ -20,20 +29,24 @@ for policy in "${scheduling_policies[@]}"; do
             for range in "${cpu_time_ranges[@]}"; do
                 min_time=$(echo "$range" | awk '{print $1}')
                 max_time=$(echo "$range" | awk '{print $2}')
-
+                
                 # Generate the test command
                 test_command="test $benchmark_name $policy $jobs $arrival 5 $min_time $max_time"
 
-                # Log the command being executed
-                echo "Running: $test_command" | tee -a "$log_file"
+                # Run the test command in AUbatch and capture output
+                output=$(echo -e "$test_command\nquit" | ./aubatch)
 
-                # Run AUbatch non-interactively and immediately exit
-                echo -e "$test_command\nquit" | ./aubatch >> "$log_file" 2>&1
-                
-                echo "--------------------------------------" >> "$log_file"
+                # Extract relevant metrics from output
+                turnaround_time=$(echo "$output" | grep "Average Turnaround Time" | awk '{print $4}')
+                cpu_time=$(echo "$output" | grep "Average CPU Time" | awk '{print $4}')
+                waiting_time=$(echo "$output" | grep "Average Waiting Time" | awk '{print $4}')
+                throughput=$(echo "$output" | grep "Throughput" | awk '{print $2}')
+
+                # Append results to CSV
+                echo "$policy,$jobs,$arrival,$min_time-$max_time,$turnaround_time,$cpu_time,$waiting_time,$throughput" >> "$csv_file"
             done
         done
     done
 done
 
-echo "Tests completed! Results saved in: $log_file"
+echo "Tests completed! Results saved in: $csv_file"

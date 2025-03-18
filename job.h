@@ -21,7 +21,9 @@
 #define MAX_JOBS 10
 #define MAX_COMPLETED 100  // Set a limit on how many completed jobs to track
 
-
+#define FCFS 0
+#define SJF 1
+#define Priority 2
 
 typedef struct {
     char name[50];
@@ -43,13 +45,14 @@ extern pthread_cond_t job_available;
 extern Job last_running_job;  // Stores the currently running job
 extern int has_running_job;   // 1 if a job is running, 0 otherwise
 
-
+void sort_jobs_by_execution_time(Job jobs[], int num_jobs);
+void sort_jobs_by_priority(Job jobs[], int num_jobs);
 void execute_job(Job job);
 void sort_jobs();
 void change_scheduling_policy(int policy);
 void *dispatcher_thread(void *arg);
 void submit_job(char *name, int execution_time, int priority, int show_output);
-
+void evaluate_performance(Job jobs[], int num_jobs, int scheduling_policy);
 
 int parse_scheduling_policy(char *policy_str);
 

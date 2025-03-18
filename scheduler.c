@@ -69,6 +69,7 @@ void change_scheduling_policy(int policy) {
     pthread_mutex_unlock(&job_queue_lock);
 }
 
+// Sorts by FCFS by default
 void submit_job(char *name, int execution_time, int priority, int show_output) {
     pthread_mutex_lock(&job_queue_lock);
 
@@ -86,4 +87,31 @@ void submit_job(char *name, int execution_time, int priority, int show_output) {
     }
 
     pthread_mutex_unlock(&job_queue_lock);
+}
+
+
+// Function to sort jobs by execution time (Shortest Job First)
+void sort_jobs_by_execution_time(Job jobs[], int num_jobs) {
+    for (int i = 0; i < num_jobs - 1; i++) {
+        for (int j = i + 1; j < num_jobs; j++) {
+            if (jobs[i].execution_time > jobs[j].execution_time) {
+                Job temp = jobs[i];
+                jobs[i] = jobs[j];
+                jobs[j] = temp;
+            }
+        }
+    }
+}
+
+// Function to sort jobs by priority (Higher priority first)
+void sort_jobs_by_priority(Job jobs[], int num_jobs) {
+    for (int i = 0; i < num_jobs - 1; i++) {
+        for (int j = i + 1; j < num_jobs; j++) {
+            if (jobs[i].priority > jobs[j].priority) { 
+                Job temp = jobs[i];
+                jobs[i] = jobs[j];
+                jobs[j] = temp;
+            }
+        }
+    }
 }
