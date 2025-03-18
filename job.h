@@ -27,7 +27,7 @@
 
 typedef struct {
     char name[50];
-    int execution_time;
+    double execution_time;
     int priority;
     time_t submission_time;
     time_t start_time;
