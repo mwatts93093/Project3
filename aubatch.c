@@ -131,7 +131,7 @@ void shell_loop() {
         
                 // Show queued jobs
                 for (int i = 0; i < job_count; i++) {
-                    printf("%-10s %-10d %-5d %-12s\n",
+                    printf("%-10s %-10.2f %-5d %-12s\n",
                            job_queue[i].name,
                            job_queue[i].execution_time,
                            job_queue[i].priority,

@@ -36,7 +36,7 @@ void evaluate_performance(Job jobs[], int num_jobs, int scheduling_policy) {
             printf("[DEBUG] Job %d Waiting Time: %.2f, Turnaround Time: %.2f\n", i + 1, total_waiting_time, total_turnaround_time);
         }
     } 
-    else if (scheduling_policy == PRIORITY) {
+    else if (scheduling_policy == Priority) {
         sort_jobs_by_priority(jobs, num_jobs);
 
         double completion_time = 0.0;
