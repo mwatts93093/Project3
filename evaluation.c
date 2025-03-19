@@ -6,19 +6,15 @@ void evaluate_performance(Job jobs[], int num_jobs, int scheduling_policy) {
     double total_waiting_time = 0.0;
     double total_cpu_time = 0.0;
 
-    printf("\n[DEBUG] Evaluating Performance for %d Jobs (Policy: %d)\n", num_jobs, scheduling_policy);
-
     if (scheduling_policy == FCFS) {
         double completion_time = 0.0;
         for (int i = 0; i < num_jobs; i++) {
-            printf("[DEBUG] Job %d Execution Time: %.2f\n", i + 1, jobs[i].execution_time);
             
             total_waiting_time += completion_time;
             completion_time += jobs[i].execution_time;
             total_turnaround_time += completion_time;
             total_cpu_time += jobs[i].execution_time;
 
-            printf("[DEBUG] Job %d Waiting Time: %.2f, Turnaround Time: %.2f\n", i + 1, total_waiting_time, total_turnaround_time);
         }
     } 
     else if (scheduling_policy == SJF) {
@@ -26,14 +22,10 @@ void evaluate_performance(Job jobs[], int num_jobs, int scheduling_policy) {
 
         double completion_time = 0.0;
         for (int i = 0; i < num_jobs; i++) {
-            printf("[DEBUG] Job %d Execution Time: %.2f\n", i + 1, jobs[i].execution_time);
-
             total_waiting_time += completion_time;
             completion_time += jobs[i].execution_time;
             total_turnaround_time += completion_time;
             total_cpu_time += jobs[i].execution_time;
-
-            printf("[DEBUG] Job %d Waiting Time: %.2f, Turnaround Time: %.2f\n", i + 1, total_waiting_time, total_turnaround_time);
         }
     } 
     else if (scheduling_policy == Priority) {
@@ -41,14 +33,12 @@ void evaluate_performance(Job jobs[], int num_jobs, int scheduling_policy) {
 
         double completion_time = 0.0;
         for (int i = 0; i < num_jobs; i++) {
-            printf("[DEBUG] Job %d Execution Time: %.2f\n", i + 1, jobs[i].execution_time);
 
             total_waiting_time += completion_time;
             completion_time += jobs[i].execution_time;
             total_turnaround_time += completion_time;
             total_cpu_time += jobs[i].execution_time;
 
-            printf("[DEBUG] Job %d Waiting Time: %.2f, Turnaround Time: %.2f\n", i + 1, total_waiting_time, total_turnaround_time);
         }
     }
 
